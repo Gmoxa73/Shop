@@ -13,7 +13,7 @@ class LoginSerializer(serializers.Serializer):
         )
         if user and user.is_active:
             return user
-        raise serializers.ValidationError("Неверные учётные данные")
+        raise serializers.ValidationError(f"Неверные учётные данные")
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)

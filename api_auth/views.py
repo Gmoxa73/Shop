@@ -9,8 +9,10 @@ class LoginView(APIView):
     POST /api/auth/login/ — вход в систему
     """
     def post(self, request):
+        print(f"DEBUG-login: Received data: {request.data}")
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
+            print(f"DEBUG: Serializer valid, user: {serializer.validated_data}")
             user = serializer.validated_data
             refresh = RefreshToken.for_user(user)
             return Response({
@@ -22,6 +24,7 @@ class LoginView(APIView):
                     'email': user.email
                 }
             }, status=status.HTTP_200_OK)
+        print(f"DEBUG: Serializer errors: {serializer.errors}")
         return Response(
             {'error': 'Неверные учётные данные'},
             status=status.HTTP_400_BAD_REQUEST
@@ -35,8 +38,11 @@ class RegisterView(APIView):
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
+            serializer.save()
+            print("Данные валидны")
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            print(serializer.errors)  # покажет ошибки валидации
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LogoutView(APIView):
