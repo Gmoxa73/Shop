@@ -141,8 +141,8 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle'
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '10/day',      # 10 запросов/день для гостей
-        'user': '100/day'    # 100 запросов/день для авторизованных
+        'anon': None,      # 10 запросов/день для гостей
+        'user': None,    # 100 запросов/день для авторизованных
     }
 }
 

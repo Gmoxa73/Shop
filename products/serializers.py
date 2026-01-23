@@ -10,12 +10,13 @@ class CustomFieldSerializer(serializers.ModelSerializer):
         fields = ['key', 'value']
 
 
-class ProductSerializer(serializers.ModelSerializer):
-    custom_fields = CustomFieldSerializer(many=True, read_only=True)
 
+class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = '__all__'
+
+    image = serializers.ImageField(required=False, allow_null=True)
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:

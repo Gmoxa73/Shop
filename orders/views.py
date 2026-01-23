@@ -9,7 +9,10 @@ from .models import Order, OrderItem
 from .serializers import OrderSerializer
 import uuid
 from django.utils import timezone
+from .tasks import send_order_confirmation, send_admin_invoice  # импорт задачи Celery
+import logging
 
+logger = logging.getLogger(__name__)
 
 class OrderConfirmView(APIView):
     def post(self, request):
@@ -27,37 +30,48 @@ class OrderConfirmView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Получаем корзину и товары
         try:
+            # Получаем корзину и товары
             cart = Cart.objects.get(id=cart_id)
+            total_amount = cart.total_amount
+
+            # Создаем заказ
+            order = Order.objects.create(
+                order_number=f"ORD-{timezone.now().year}-{uuid.uuid4().hex[:5].upper()}",
+                created_at=timezone.now(),
+                total_amount=total_amount,
+                status='pending',
+                cart_id=cart_id,
+                contact_id=contact_id
+            )
+
+            # Сохраняем позиции заказа
+            for item in cart.items.all():
+                OrderItem.objects.create(
+                    order=order,
+                    product_name=item.product.name,
+                    quantity=item.quantity,
+                    price=item.price
+                )
+
+            # ВЫЗОВ CELERY-ЗАДАЧ
+            send_order_confirmation.delay(order_id=order.id)
+            send_admin_invoice.delay(order_id=order.id)
+
+            serializer = OrderSerializer(order)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
         except Cart.DoesNotExist:
             return Response(
                 {"error": "Корзина не найдена"},
                 status=status.HTTP_404_NOT_FOUND
-            )  # логика получения корзины
-        total_amount = cart.total_amount  # предполагаем поле total_amount в корзине
-
-        # Создаем заказ
-        order = Order.objects.create(
-            order_number=f"ORD-{datetime.now().year}-{uuid.uuid4().hex[:5].upper()}",
-            created_at=datetime.now(),
-            total_amount=total_amount,
-            status='pending',
-            cart_id=cart_id,
-            contact_id=contact_id
-        )
-
-        # Сохраняем позиции заказа
-        for item in cart.items.all():
-            OrderItem.objects.create(
-                order=order,
-                product_name=item.product.name,
-                quantity=item.quantity,
-                price=item.price
             )
-
-        serializer = OrderSerializer(order)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            logger.error(f"Order creation failed: {e}")
+            return Response(
+                {"error": "Произошла ошибка при создании заказа"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class OrderListView(APIView):

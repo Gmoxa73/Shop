@@ -1,28 +1,22 @@
+from django.contrib.auth.models import User
 from django.db import models
 from django.core.validators import MinValueValidator
 from products.models import Product
 
 
 class Cart(models.Model):
-    user = models.ForeignKey(
-        'auth.User',
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        db_index=True  # добавлен индекс
-    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, default='active')
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
-    @property
-    def total_amount(self):
-        """Общая сумма товаров в корзине."""
-        return sum(item.price * item.quantity for item in self.items.all())
-
-    def __str__(self):
-        if self.user:
-            return f'Корзина пользователя {self.user.username}'
-        return f'Гостевая корзина {self.id}'
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'status'],
+                condition=models.Q(status='active'),
+                name='unique_active_cart_per_user'
+            )
+        ]
 
 class CartItem(models.Model):
     cart = models.ForeignKey(

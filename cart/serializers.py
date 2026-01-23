@@ -7,19 +7,20 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = ['id', 'name', 'price', 'image']
 
+
 class CartItemSerializer(serializers.ModelSerializer):
-    product_name = serializers.CharField(source='product.name', read_only=True)
-    class Meta:
-        model = CartItem
-        fields = ['id', 'cart', 'product', 'product_name', 'quantity', 'price']
+    product_name = serializers.SerializerMethodField()
 
     class Meta:
         model = CartItem
-        fields = ['id', 'product', 'quantity', 'price']
+        fields = ['id', 'product', 'product_name', 'quantity', 'price']
+
+    def get_product_name(self, obj):
+        return obj.product.name
 
 class CartSerializer(serializers.ModelSerializer):
     items = CartItemSerializer(many=True, read_only=True)
 
     class Meta:
         model = Cart
-        fields = ['id', 'items', 'created_at', 'updated_at']
+        fields = ['id', 'user', 'items', 'created_at']

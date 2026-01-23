@@ -1,26 +1,15 @@
 from rest_framework import serializers
 from .models import Order, OrderItem
 
+
 class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderItem
-        fields = ['product_name', 'quantity', 'price']
+        fields = ['id', 'product', 'product_name', 'quantity', 'price', 'total_price']
+
 
 class OrderSerializer(serializers.ModelSerializer):
-    items = serializers.SerializerMethodField()
-
-    def get_items(self, obj):
-        if not obj.cart:
-            return []  # или другое значение по умолчанию
-        cart_items = obj.cart.items.all()
-        return [
-            {
-                'product_name': item.product.name,
-                'quantity': item.quantity,
-                'price': item.price
-            }
-            for item in cart_items
-        ]
+    items = OrderItemSerializer(many=True, read_only=True)
 
     class Meta:
         model = Order

@@ -1,31 +1,43 @@
+
 from rest_framework import serializers
-from .models import Address, Contact
+from .models import Contact, Address
 
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
-        fields = ['city', 'street', 'house', 'building', 'structure', 'apartment']
-
+        fields = '__all__'
 
 class ContactSerializer(serializers.ModelSerializer):
-    address = AddressSerializer()  # Вложенная структура
+    address = AddressSerializer()  # вложенный сериализатор
 
     class Meta:
         model = Contact
-        fields = [
-            'id', 'last_name', 'first_name', 'patronymic',
-            'email', 'phone', 'address'
-        ]
+        fields = '__all__'
 
     def create(self, validated_data):
-        # Извлекаем данные адреса
         address_data = validated_data.pop('address', None)
-        contact = Contact.objects.create(**validated_data)
-
         if address_data:
-            # Создаём адрес и связываем с контактом
             address = Address.objects.create(**address_data)
-            contact.address = address
-            contact.save()
-
+            validated_data['address'] = address
+        contact = Contact.objects.create(**validated_data)
         return contact
+
+    def update(self, instance, validated_data):
+        address_data = validated_data.pop('address', None)
+        if address_data and instance.address:
+            address_serializer = AddressSerializer(
+                instance.address,
+                data=address_data
+            )
+            if address_serializer.is_valid():
+                address_serializer.save()
+        elif address_data:
+            Address.objects.create(
+                **address_data,
+                contact=instance
+            )
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
