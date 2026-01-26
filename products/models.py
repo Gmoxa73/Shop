@@ -1,5 +1,7 @@
 from django.core.validators import MinValueValidator
 from django.db import models
+from easy_thumbnails.fields import ThumbnailerImageField
+
 
 class Category(models.Model):
     name = models.CharField(max_length=200)
@@ -18,7 +20,7 @@ class Product(models.Model):
     )
     quantity = models.IntegerField()
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='products/', blank=True, null=True)
+    image = ThumbnailerImageField(upload_to='products/', blank=True, null=True)
     description = models.TextField(blank=True, null=True)
 
     def __str__(self):

@@ -1,0 +1,10 @@
+<h1>Профиль пользователя</h1>
+<p>Имя: {{ request.user.username }}</p>
+
+{% if profile.avatar %}
+    <img src="{{ profile.avatar.url }}" alt="Аватар" width="100" height="100">
+{% else %}
+    <p>Аватара нет</p>
+{% endif %}
+
+<a href="{% url 'update_avatar' %}">Изменить аватар</a>

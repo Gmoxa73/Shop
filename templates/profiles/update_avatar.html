@@ -1,0 +1,9 @@
+<h1>Обновить аватар</h1>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Сохранить</button>
+</form>
+
+<a href="{% url 'user_profile' %}">Вернуться в профиль</a>

@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 
+from django.template.context_processors import media
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -40,6 +42,9 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework',
     'drf_spectacular',
+    'cachalot',  # для django-cachalot
+    'cacheops',  # для django-cacheops
+    'easy_thumbnails',
 
     'products',
     'orders',
@@ -93,6 +98,11 @@ DATABASES = {
 'PORT': '5432',
 }
 }
+
+import os
+
+MEDIA_URL = '/media/'  # URL для доступа к медиафайлам (должен совпадать с роутингом в urls.py)
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # Путь к папке на сервере
 
 
 # Password validation
@@ -158,10 +168,64 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',  # стандартный бэкенд
 ]
 
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Your Project API',
     'DESCRIPTION': 'Your project description',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
     # OTHER SETTINGS
+}
+
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'  # Redis на localhost
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+# 2. Настройки easy-thumbnails
+THUMBNAIL_ALIASES = {
+    '': {
+        'avatar_small': {'size': (100, 100), 'crop': True},
+        'avatar_medium': {'size': (200, 200), 'crop': True},
+        'product_thumb': {'size': (300, 300), 'crop': False},
+    },
+}
+THUMBNAIL_BASEDIR = 'thumbnails'
+THUMBNAIL_CACHE_TIMEOUT = 60 * 60 * 24  # 1 сутки
+THUMBNAIL_DEBUG = False
+
+# 3. Хранение файлов (настройка под ваш случай)
+# Для локального хранения:
+DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+
+# Для S3 (если используете):
+# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+# AWS_ACCESS_KEY_ID = 'ваш_ключ'
+# AWS_SECRET_ACCESS_KEY = 'ваш_секрет'
+# AWS_STORAGE_BUCKET_NAME = 'ваш_бакет'
+
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/0',  # DB 1
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
+# Настройки для django-cachalot
+CACHALOT_ENABLED = True
+CACHALOT_CACHE = 'default'
+CACHALOT_TABLE_WHITELIST = ['products', 'cart', 'ProductParameter','orders', 'api_auth']
+
+# Для django-cacheops
+CACHEOPS = {
+    'products.*': {'ops': 'all', 'timeout': 60 * 60},  # 1 час
+    'orders.*': {'ops': 'all', 'timeout': 60 * 30},  # 30 минут для заказов
+    'categories.*': {'ops': 'all', 'timeout': 60 * 30},  # 30 минут для заказов
+    'auth.*': {'ops': ('fetch', 'get'), 'timeout': 60 * 15},  # 15 минут
+    'cart.cart': {'ops': 'all', 'timeout': 60 * 15,}, # 15 минут (можно изменить)
 }

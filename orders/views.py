@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from cacheops import cached_as
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -75,6 +76,7 @@ class OrderConfirmView(APIView):
 
 
 class OrderListView(APIView):
+    @cached_as(Order.objects.all(), timeout=300)
     def get(self, request):
         orders = Order.objects.all()
         serializer = OrderSerializer(orders, many=True)

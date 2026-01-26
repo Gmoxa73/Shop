@@ -70,3 +70,4 @@ class LogoutView(APIView):
                 {'error': 'Ошибка при выходе'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+

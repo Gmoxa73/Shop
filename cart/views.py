@@ -1,3 +1,4 @@
+from cacheops import cached_as
 from django.db import transaction
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -8,6 +9,7 @@ from products.models import Product
 
 
 class CartView(APIView):
+    @cached_as(Cart.objects.all(), timeout=300)
     def get(self, request):
         if not request.user.is_authenticated:
             return Response(
