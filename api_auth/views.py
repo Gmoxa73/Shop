@@ -70,4 +70,7 @@ class LogoutView(APIView):
                 {'error': 'Ошибка при выходе'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+from django.shortcuts import render
 
+def home(request):
+    return render(request, 'social/home.html')  # укажите ваш шаблон
