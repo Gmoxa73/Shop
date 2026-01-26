@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'cachalot',  # для django-cachalot
     'cacheops',  # для django-cacheops
     'easy_thumbnails',
+    'social_django',
 
     'products',
     'orders',
@@ -165,6 +166,10 @@ SIMPLE_JWT = {
 }
 
 AUTHENTICATION_BACKENDS = [
+
+    'social_core.backends.google.GoogleOAuth2',
+    'social_core.backends.github.GithubOAuth2',
+    'social_core.backends.facebook.FacebookOAuth2',
     'django.contrib.auth.backends.ModelBackend',  # стандартный бэкенд
 ]
 
@@ -229,3 +234,16 @@ CACHEOPS = {
     'auth.*': {'ops': ('fetch', 'get'), 'timeout': 60 * 15},  # 15 минут
     'cart.cart': {'ops': 'all', 'timeout': 60 * 15,}, # 15 минут (можно изменить)
 }
+
+# Настройки для Google
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = 'ВАШ_GOOGLE_CLIENT_ID'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = 'ВАШ_GOOGLE_CLIENT_SECRET'
+
+# Настройки для GitHub
+SOCIAL_AUTH_GITHUB_KEY = 'ВАШ_GITHUB_CLIENT_ID'
+SOCIAL_AUTH_GITHUB_SECRET = 'ВАШ_GITHUB_CLIENT_SECRET'
+
+# Общие настройки
+SOCIAL_AUTH_URL_NAMESPACE = 'social'
+LOGIN_REDIRECT_URL = '/'  # куда перенаправлять после входа
+LOGOUT_REDIRECT_URL = '/'  # куда перенаправлять после выхода
